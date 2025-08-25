@@ -9,6 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import {usePuterStore} from "~/lib/puter";
+import {useEffect} from "react";
+import {useLocation, useNavigate} from "react-router";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,6 +27,12 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { init } = usePuterStore();
+
+  useEffect(() => {
+    init()
+  }, [init]);
+
   return (
     <html lang="en">
       <head>
@@ -33,6 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <script src="https://js.puter.com/v2/"></script>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -42,6 +52,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const { auth, isLoading } = usePuterStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading) return;
+    
+    const isAuthPage = location.pathname === '/auth';
+    const isPublicPage = ['/', '/about', '/services', '/contact', '/faq'].includes(location.pathname);
+    
+    if (!auth.isAuthenticated && !isAuthPage && !isPublicPage) {
+      // Redirect to login if not authenticated and not on a public page
+      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
+    } else if (auth.isAuthenticated && isAuthPage) {
+      // Redirect to home or intended page if already authenticated
+      const searchParams = new URLSearchParams(location.search);
+      const next = searchParams.get('next') || '/';
+      navigate(next);
+    }
+  }, [auth.isAuthenticated, isLoading, location, navigate]);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return <Outlet />;
 }
 
