@@ -1,4 +1,4 @@
-# AI Resume Analyzer
+# HireLens-AI  
 
 A modern web application that helps job seekers analyze and improve their resumes using AI. The application provides detailed feedback on resume content, ATS (Applicant Tracking System) compatibility, and suggestions for improvement.
 
